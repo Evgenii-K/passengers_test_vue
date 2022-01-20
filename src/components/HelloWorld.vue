@@ -1,58 +1,239 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div class="wrapper">
+
+    <transition-group name="fade" tag="div">
+      <div 
+        v-for="passenger in passengers"
+        :key="passenger._id"
+        class="card"
+      >
+        <div class="card__person">
+          <div class="card__title">{{passenger.name ? passenger.name : 'No name'}}</div>
+          <div class="card__content">Trips: {{passenger.trips ? passenger.trips : '___'}}</div>
+
+          <button 
+            @click="deleteItem(passenger._id)"
+            class="card__button"
+          >
+            Удалить
+          </button>
+        </div>
+        <div class="card__airlines">
+          <div class="card__title">Airline: {{passenger.airline[0].name}}</div>
+          <img alt="Airline Logo" :src="passenger.airline[0].logo" class="card__airlines-image"/>
+          <button 
+            @click="showPopUp(passenger.airline[0])"
+            class="card__button"  
+          >
+            Подробнее
+          </button>
+        </div>
+      </div>
+    </transition-group>
+
+    <div
+      class="scroll"
+      v-detect-viewport="{callback: this.getData}"
+    />
+
+    <PopUp
+      :isPopupShow="isPopupShow"
+      minWidth="600px"
+      @close="isPopupShow = false"
+    >
+      <AirlineInfo
+        :aboutAirline="aboutAirline"
+      />
+    </PopUp>
+
   </div>
 </template>
 
 <script>
+import PopUp from './PopUp.vue'
+import AirlineInfo from './AirlineInfo.vue'
+
 export default {
   name: 'HelloWorld',
-  props: {
-    msg: String
+  components: {
+    PopUp,
+    AirlineInfo,
+  },
+  data() {
+    return {
+      passengers: [],
+      currentPage: 0,
+      isPopupShow: false,
+      aboutAirline: {}
+    }
+  },
+  methods: {
+    showPopUp(aboutAirline) {
+      this.isPopupShow = true
+      this.aboutAirline = aboutAirline
+    },
+    deleteItem(id) {
+      this.passengers = this.passengers.filter(item => item._id !== id)
+    },
+    async getFirstPage() {
+      try {
+        const response = await fetch(`https://api.instantwebtools.net/v1/passenger?page=0&size=10`)
+
+        const passengersData = await response.json()
+        
+        if(!passengersData.data) return console.log('Нет данных')
+
+        this.passengers = passengersData.data
+
+        this.currentPage++
+        
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async getData() {
+      try {
+        await this.blockingPromise
+
+        const response = await fetch(`https://api.instantwebtools.net/v1/passenger?page=${this.currentPage}&size=10`)
+
+        const {data} = await response.json()
+        
+        if(!data) return console.log('Нет данных')
+
+        this.passengers = [...this.passengers, ...data]
+        
+        this.currentPage++
+
+        console.log(this.passengers)
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async init() {
+      return this.blockingPromise = this.getFirstPage()
+    },
+    setPostsObserver() {
+      /* создаём наблюдение */
+      const postsObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => { /* для каждого элемента */
+          if (entry.isIntersecting) { /* если элемент в видимой области браузера */
+            entry.target.classList.add('post_active') /* добавляем активный класс наблюдаемому элементу, то есть карточки */
+            observer.unobserve(entry.target); /* и отключаем наблюдение за этим постом */
+          }
+        })
+      });
+
+      this.$el.querySelectorAll('.card:not(.post_active)').forEach(post => { /* получаем только неактивные карточки */
+        postsObserver.observe(post) /* указываем, что наблюдаем за ними */
+      })
+    },
+  },
+  created() {
+    this.init()
+  },
+  updated() {
+    this.setPostsObserver()
+    if (this.currentPage === 3) {
+      const cards = this.$el.querySelectorAll('.card')
+      for(let key = 0; key < 10; key++) {
+        cards[key].classList.add('post_active')
+      }
+    }
   }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-h3 {
-  margin: 40px 0 0;
+
+.scroll {
+  width: 100%;
+  height: 32px;
+  background: center center no-repeat url('../assets/dost-loader.svg');
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+
+.wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
+
+.card {
+  background: #4e567d;
+  width: 800px;
+  height: 220px;
+  box-shadow: 0 20px 40px -15px rgb(0 0 0 / 25%);
+  border-radius: 5px;
+  margin: 10px;
+  overflow: hidden;
+  transform: translateY(48px) scale(0.9);
+  transition: all 0.8s;
+  opacity: 0;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+
+  &__title {
+    font-size: 20px;
+  }
+
+  &__content {
+
+  }
+
+  &__person {
+    color: white;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__button {
+    background: #ff6a5e;
+    height: 40px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: sans-serif;
+    font-size: 100%;
+    line-height: 1.15;
+    margin: 0;
+    color: white;
+    border: none;
+    min-width: 120px;
+
+    &:hover {
+      background: #ff4d40;
+    }
+  }
+
+  &__airlines {
+    background: #fff;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+
+    &-image {
+      max-height: 100px;
+    }
+  }
 }
-a {
-  color: #42b983;
+
+.post_active {
+  transform: translateY(0px) scale(1);
+  opacity: 1;
 }
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(48px) scale(0.9);
+}
+
+.fade-leave-active {
+  position: absolute;
+}
+
 </style>
