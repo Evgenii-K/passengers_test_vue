@@ -8,7 +8,6 @@
       <div class="paper__text"><p>Слоган: </p>{{ aboutAirline.slogan }}</div>
       <div class="paper__text"><p>website: </p><a :href="'https://' + aboutAirline.website">{{ aboutAirline.website }}</a></div>
     </div>
-
   </div>
 </template>
 

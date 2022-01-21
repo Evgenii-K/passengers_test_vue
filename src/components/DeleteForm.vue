@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div>
     <slot></slot>
     <div class="button__group">
       <Button notPrimary @click="$emit('confirm')">
@@ -15,13 +15,13 @@
 <script>
 export default {
   name: 'ChoiceForm',
-
 }
 </script>
 
 <style lang="scss" scoped>
 .button__group {
   display: flex;
+  justify-content: center;
   grid-gap: 30px;
   padding-top: 30px;
 }

@@ -1,7 +1,11 @@
 <template>
-  <div class="wrapper">
+  <div>
 
-    <transition-group name="fade" tag="div">
+    <transition-group 
+      name="fade" 
+      tag="div"
+      class="card__container"
+    >
       <PassengerCard
         v-for="passenger in passengers"
         :key="passenger._id"
@@ -18,7 +22,7 @@
 
     <PopUp
       :isPopupShow="isPopupAirlineShow"
-      minWidth="600px"
+      :minWidth="windowWidth > 600 ? '600px' : ''"
       @close="isPopupAirlineShow = false"
     >
       <AirlineInfo
@@ -27,17 +31,27 @@
     </PopUp>
 
     <PopUp
-      :isPopupShow="isPopUpDeletePassShow"
+      :isPopupShow="isPopupDeletePassShow"
       minWidth="300px"
       :isShowButton="false"
-      @close="isPopUpDeletePassShow = false"
+      @close="isPopupDeletePassShow = false"
     >
       <DeleteForm
         @confirm="deleteCard"
-        @cancel="isPopUpDeletePassShow = false"
+        @cancel="isPopupDeletePassShow = false"
       >
         <h4>Вы уверены что хотите удалить данные пассажира {{passengerName}}?</h4>
       </DeleteForm>
+    </PopUp>
+
+    <PopUp
+      :isPopupShow="isPopupConfirmShow"
+      minWidth="300px"
+      :isShowButton="false"
+    >
+      <ConfirmForm
+        @close="isPopupConfirmShow = false"
+      />
     </PopUp>
 
   </div>
@@ -47,6 +61,7 @@
 import AirlineInfo from '@components/AirlineInfo.vue'
 import PassengerCard from '@components/PassengerCard.vue'
 import DeleteForm from '@components/DeleteForm.vue'
+import ConfirmForm from '@components/ConfirmForm.vue'
 
 export default {
   name: 'HelloWorld',
@@ -54,6 +69,7 @@ export default {
     AirlineInfo,
     PassengerCard,
     DeleteForm,
+    ConfirmForm,
   },
   data() {
     return {
@@ -63,7 +79,8 @@ export default {
       aboutAirline: {},
       passengerName: '',
       passengerId: null,
-      isPopUpDeletePassShow: false,
+      isPopupDeletePassShow: false,
+      isPopupConfirmShow: false,
     }
   },
   methods: {
@@ -74,11 +91,14 @@ export default {
     showDeleteCardPopUp(id) {
       this.passengerId = id
       this.passengerName = this.passengers.filter(item => item._id !== id)[0].name
-      this.isPopUpDeletePassShow = true
+      this.isPopupDeletePassShow = true
     },
     deleteCard() {
+      this.isPopupDeletePassShow = false
       this.passengers = this.passengers.filter(item => item._id !== this.passengerId)
-      this.isPopUpDeletePassShow = false
+      setTimeout(() => {
+        this.isPopupConfirmShow = true
+      }, 1000);
     },
     async getCurrentPage() {
       try {
@@ -125,6 +145,11 @@ export default {
         cards[key].classList.add('post_active')
       }
     }
+  },
+  computed: {
+    windowWidth() {
+      return window.innerWidth
+    }
   }
 }
 </script>
@@ -137,11 +162,12 @@ export default {
   background: center center no-repeat url('../assets/dost-loader.svg');
 }
 
-.wrapper {
+.card__container {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 10px;
 }
 
 .post_active {

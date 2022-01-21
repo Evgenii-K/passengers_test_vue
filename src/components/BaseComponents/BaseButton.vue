@@ -43,7 +43,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .button {
   background-color: #ff6a5e;
   font-size: 16px;
@@ -81,7 +80,5 @@ export default {
   &:disabled {
     background-color: #9b605c;
   }
-
-
 }
 </style>

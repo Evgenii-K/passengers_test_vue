@@ -36,7 +36,7 @@ export default {
 <style lang="scss" scoped>
 .card {
   background: #4e567d;
-  width: 800px;
+  width: 748px;
   height: 220px;
   box-shadow: 0 20px 40px -15px rgb(0 0 0 / 25%);
   border-radius: 5px;
@@ -50,10 +50,6 @@ export default {
 
   &__title {
     font-size: 20px;
-  }
-
-  &__content {
-
   }
 
   &__person {
@@ -94,6 +90,20 @@ export default {
     &-image {
       max-height: 100px;
     }
+  }
+}
+
+@media (max-width: 767px) {
+  .card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 575px) {
+  .card {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1.5fr;
+    height: 340px;
   }
 }
 </style>

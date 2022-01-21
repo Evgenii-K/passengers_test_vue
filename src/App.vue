@@ -1,23 +1,22 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld/>
+    <PassengersList/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import PassengersList from '@components/PassengersList.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld,
+    PassengersList,
   }
 }
 </script>
 
 <style lang="scss">
-
 *,
 *::before,
 *::after {
@@ -37,5 +36,4 @@ body  {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
 }
-
 </style>
